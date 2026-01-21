@@ -1,12 +1,13 @@
 import genToken from "../config/token.js"
 import User from "../models/user.model.js"
 import bcrypt from "bcryptjs"
+
 export const signUp = async (req,res)=>{
     try {
         const {name,email,password} = req.body
         if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
+            return res.status(400).json({ message: "All fields are required" });
+        }
 
         const existEmail = await User.findOne({email})
         if(existEmail){
@@ -21,17 +22,21 @@ export const signUp = async (req,res)=>{
         const user = await User.create({name,password:hashedPassword,email})
 
         const token = await genToken(user._id)
+
+        // 🔧 FIX: Chrome requires SAME settings for cross-site cookies
         res.cookie("token",token,{
             httpOnly:true,
             maxAge:10*24*60*60*1000,
-            sameSite:"lax",
-            secure:false
+            sameSite:"none",   // ← changed
+            secure:true        // ← changed
         })
+
         return res.status(201).json(user)
     } catch (error) {
         return res.status(500).json({message:`signup error ${error}`})
     }
 };
+
 export const Login = async (req,res)=>{
     try {
         const {email,password} = req.body
@@ -45,22 +50,29 @@ export const Login = async (req,res)=>{
             return res.status(400).json({message:"Incorrect credential"})
         }
 
-
         const token = await genToken(user._id)
+
+        // 🔧 FIX: must match signup cookie exactly
         res.cookie("token",token,{
             httpOnly:true,
             maxAge:10*24*60*60*1000,
-            sameSite:"strict",
-            secure:false
+            sameSite:"none",   // ← already correct
+            secure:true        // ← already correct
         })
+
         return res.status(200).json(user)
     } catch (error) {
         return res.status(500).json({message:`Login error ${error}`})
     }
 };
+
 export const logout = async (req,res)=>{
     try {
-        res.clearCookie("token")
+        // 🔧 FIX: clear cookie using SAME attributes
+        res.clearCookie("token",{
+            sameSite:"none",
+            secure:true
+        })
         return res.status(200).json({message:`logged out successfully`})
     } catch (error) {
         return res.status(500).json({message:`Logout error ${error}`})

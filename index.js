@@ -19,16 +19,7 @@ app.use(express.json())
 app.use(cookieParser())
 app.use("/api/auth",authRouter)
 app.use("/api/user",userRouter)
-// app.get("/", async (req, res) => {
-//   const prompt = req.query.prompt;
 
-//   if (!prompt) {
-//     return res.status(400).json({ error: "Prompt is required" });
-//   }
-
-//   const data = await geminiResponse(prompt);
-//   res.json({ reply: data });
-// });
 
 app.listen(port,()=>{
     connectDb()
