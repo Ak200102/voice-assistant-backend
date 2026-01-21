@@ -21,6 +21,9 @@ export const updateAssistant = async (req, res) => {
   try {
     const { assistantName, imageUrl } = req.body;
 
+    if (!assistantName) {
+      return res.status(400).json({ message: "Assistant name is required" })
+    }
     let assistantImage;
     if (req.files && req.files.length > 0) {
       assistantImage = await uploadCloudinary(req.files[0].path);
@@ -34,10 +37,10 @@ export const updateAssistant = async (req, res) => {
       { new: true }
     ).select("-password");
 
-    res.status(200).json(user);
+    return res.status(200).json(user);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
   }
 };
 
@@ -45,8 +48,11 @@ export const askToAssistant = async (req, res) =>{
   try {
     const command = req.body.command
     const user = await User.findById(req.userId)
+    if (!user) {
+      return res.status(400).json({ response: "User not found" })
+    }
     user.history.push(command)
-    user.save()
+    await user.save()
     const userName = user.name
     const assistantName = user.assistantName
     const result = await geminiResponse(command,assistantName,userName)
