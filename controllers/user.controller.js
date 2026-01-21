@@ -22,10 +22,18 @@ export const updateAssistant = async (req, res) => {
     const { assistantName, imageUrl } = req.body;
 
     if (!assistantName) {
-      return res.status(400).json({ message: "Assistant name is required" })
+      return res.status(400).json({ message: "Assistant name is required" });
     }
+
     let assistantImage;
+
     if (req.files && req.files.length > 0) {
+
+      //  ensure path exists before calling cloudinary
+      if (!req.files[0].path) {
+        return res.status(400).json({ message: "Invalid image upload" });
+      }
+
       assistantImage = await uploadCloudinary(req.files[0].path);
     } else {
       assistantImage = imageUrl;
@@ -43,6 +51,7 @@ export const updateAssistant = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
 
 export const askToAssistant = async (req, res) =>{
   try {
